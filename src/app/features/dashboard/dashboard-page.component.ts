@@ -17,7 +17,7 @@ import { OperationMode } from '../../core/models/operation.model';
   imports: [RouterLink, MatButtonModule, MatCardModule, MatIconModule],
   template: `
     <div class="page">
-      <h1 class="page-title">Utransfer UI</h1>
+      <h1 class="page-title">utransfer UI</h1>
       <p class="helper-text">
         Build any utransfer command without remembering flags. Profiles, presets and history
         live in your browser only — nothing is sent over the network.
