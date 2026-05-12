@@ -1,5 +1,5 @@
-import { Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,6 +9,8 @@ import { ServerProfilesService } from '../../core/services/server-profiles.servi
 import { TransferPresetsService } from '../../core/services/transfer-presets.service';
 import { DOC_LINK, OPERATING_MODES } from '../../core/data/utransfer-catalog';
 import { JarPathService } from '../../core/services/jar-path.service';
+import { WizardService } from '../wizard/wizard.service';
+import { OperationMode } from '../../core/models/operation.model';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -23,7 +25,7 @@ import { JarPathService } from '../../core/services/jar-path.service';
 
       <div class="card-grid">
         @for (mode of modes; track mode.value) {
-          <mat-card class="action-card" routerLink="/wizard" (click)="seedMode(mode.value)">
+          <mat-card class="action-card" (click)="openWizardWithMode(mode.value)">
             <mat-icon>{{ mode.icon }}</mat-icon>
             <h3>{{ mode.displayName }}</h3>
             <p>{{ mode.description }}</p>
@@ -125,9 +127,13 @@ export class DashboardPageComponent {
   protected readonly profiles = inject(ServerProfilesService);
   protected readonly presets = inject(TransferPresetsService);
   protected readonly jar = inject(JarPathService);
+  private readonly wizard = inject(WizardService);
+  private readonly router = inject(Router);
 
-  protected seedMode(_mode: string): void {
-    // wizard reads from WizardService; clicking the card simply navigates.
+  protected openWizardWithMode(mode: OperationMode): void {
+    this.wizard.setMode(mode);
+    this.wizard.requestInitialStep(1);
+    void this.router.navigateByUrl('/wizard');
   }
 
   protected formatDate(ts: number): string {

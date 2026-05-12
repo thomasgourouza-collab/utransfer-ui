@@ -1,7 +1,7 @@
-import { Component, computed, inject } from '@angular/core';
+import { AfterViewInit, Component, computed, inject, viewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatStepperModule } from '@angular/material/stepper';
+import { MatStepper, MatStepperModule } from '@angular/material/stepper';
 
 import { OperationStepComponent } from './steps/operation-step.component';
 import { SourceStepComponent } from './steps/source-step.component';
@@ -42,7 +42,7 @@ import { Router, RouterLink } from '@angular/router';
         </button>
       </div>
 
-      <mat-stepper #stepper [linear]="false" orientation="horizontal">
+      <mat-stepper [linear]="false" orientation="horizontal">
         <mat-step label="Operation">
           <app-operation-step />
         </mat-step>
@@ -83,9 +83,17 @@ import { Router, RouterLink } from '@angular/router';
     `,
   ],
 })
-export class WizardPageComponent {
+export class WizardPageComponent implements AfterViewInit {
   protected readonly wizard = inject(WizardService);
   private readonly router = inject(Router);
+  private readonly stepper = viewChild.required(MatStepper);
+
+  ngAfterViewInit(): void {
+    const step = this.wizard.consumeInitialStep();
+    if (step !== null) {
+      queueMicrotask(() => (this.stepper().selectedIndex = step));
+    }
+  }
 
   protected readonly currentMode = computed(() =>
     OPERATING_MODES.find((m) => m.value === this.wizard.config().mode),

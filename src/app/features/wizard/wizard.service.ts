@@ -15,6 +15,18 @@ export class WizardService {
   readonly config = this.configSignal.asReadonly();
   readonly generated = computed(() => this.builder.build(this.configSignal()));
 
+  private pendingInitialStep: number | null = null;
+
+  requestInitialStep(step: number): void {
+    this.pendingInitialStep = step;
+  }
+
+  consumeInitialStep(): number | null {
+    const step = this.pendingInitialStep;
+    this.pendingInitialStep = null;
+    return step;
+  }
+
   constructor() {
     // Keep jar path in sync with the global setting.
     effect(() => {
