@@ -96,15 +96,33 @@ import { IdConversion } from '../../../core/models/operation.model';
         Verbose logging
         <app-info-popover text="Log full HTTP requests and responses — useful for debugging but may include credentials." />
       </mat-checkbox>
-      <mat-checkbox
-        [ngModel]="config().deleteUnmatched"
-        (ngModelChange)="set({ deleteUnmatched: $event })"
-        [disabled]="!isImportLike()"
-      >
-        Delete unmatched target entities (import only)
-        <app-info-popover text="Removes target entities that don't appear in the source. Use with extreme care." />
-      </mat-checkbox>
     </div>
+
+    @if (isImportLike()) {
+      <h3 class="section-title">User import options</h3>
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Default password for newly created users
+          <app-info-popover text="Used as the initial password for users created during import. Maps to --new-user-password." />
+        </mat-label>
+        <input
+          matInput
+          type="password"
+          [ngModel]="config().newUserPassword"
+          (ngModelChange)="set({ newUserPassword: $event })"
+          autocomplete="new-password"
+        />
+      </mat-form-field>
+      <div class="col">
+        <mat-checkbox
+          [ngModel]="config().noUtransferUser"
+          (ngModelChange)="set({ noUtransferUser: $event })"
+        >
+          Don't create a temporary utransfer user (superadmin target only)
+          <app-info-popover text="When the target uses superadmin auth, utransfer normally creates a short-lived utransfer user in the target account. Enable this to switch account directly instead. Maps to --no-utransfer-user." />
+        </mat-checkbox>
+      </div>
+    }
   `,
   styles: [
     `

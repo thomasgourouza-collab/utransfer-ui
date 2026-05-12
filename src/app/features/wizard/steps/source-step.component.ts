@@ -13,6 +13,7 @@ import { EndpointConfig } from '../../../core/models/transfer-config.model';
       [endpoint]="endpoint()"
       (endpointChange)="onChange($event)"
       [placeholder]="placeholder()"
+      side="from"
     />
   `,
 })

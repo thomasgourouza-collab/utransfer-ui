@@ -48,7 +48,8 @@ export class CommandBuilderService {
     if (config.keepApiKeys) argv.push('--keepApiKeys');
     if (config.keepMarkers) argv.push('--keepMarkers');
     if (config.verbose) argv.push('--verbose');
-    if (config.deleteUnmatched) argv.push('--delete');
+    if (config.newUserPassword) argv.push(`--new-user-password=${config.newUserPassword}`);
+    if (config.noUtransferUser) argv.push('--no-utransfer-user');
 
     const oneLiner = argv.map(shellQuote).join(' ');
     const multiLine = this.formatMultiLine(argv);
@@ -72,10 +73,14 @@ export class CommandBuilderService {
       case 'superadmin':
         if (endpoint.username) argv.push(`--${cap}Superadmin=${endpoint.username}`);
         if (endpoint.password) argv.push(`--${cap}Password=${endpoint.password}`);
+        if (side === 'from' && endpoint.account) {
+          argv.push(`--fromAccount=${endpoint.account}`);
+        }
         break;
       case 'header':
-        if (endpoint.headerName) argv.push(`--${cap}Header=${endpoint.headerName}`);
-        if (endpoint.headerValue) argv.push('-d', endpoint.headerValue);
+        if (endpoint.headerName && endpoint.headerValue) {
+          argv.push(`--${cap}Header=${endpoint.headerName}=${endpoint.headerValue}`);
+        }
         break;
       case 'noauth':
         argv.push(`--${cap}NoAuth`);
@@ -118,6 +123,12 @@ export class CommandBuilderService {
     if (config.addSuffix && config.removeSuffix) {
       errors.push('Cannot use Add suffix and Remove suffix at the same time.');
     }
+    if (config.source.account && config.source.auth !== 'superadmin') {
+      errors.push('Source account ID only applies with superadmin authentication.');
+    }
+    if (config.source.account && mode.sourceKind !== 'server') {
+      errors.push('Source account ID only applies when the source is an Unblu server.');
+    }
   }
 
   private validateEndpoint(endpoint: EndpointConfig, label: string, errors: string[]): void {
@@ -135,6 +146,17 @@ export class CommandBuilderService {
     }
   }
 
+  private collectGlobalWarnings(config: TransferConfig, warnings: string[]): void {
+    const sourceAuth = config.source.kind === 'server' ? config.source.auth : null;
+    const targetAuth = config.target.kind === 'server' ? config.target.auth : null;
+    if (sourceAuth === 'admin') {
+      warnings.push('GLOBAL is selected but the source is using admin credentials — superadmin is required.');
+    }
+    if (targetAuth === 'admin') {
+      warnings.push('GLOBAL will be ignored on import because the target uses admin credentials (superadmin required).');
+    }
+  }
+
   private collectWarnings(config: TransferConfig, warnings: string[]): void {
     const selected = this.effectivelyIncludedEntities(config);
 
@@ -148,14 +170,7 @@ export class CommandBuilderService {
       warnings.push('DEPUTIES will be exported without credentials.');
     }
     if (selected.has('GLOBAL')) {
-      const sourceAuth = config.source.kind === 'server' ? config.source.auth : null;
-      const targetAuth = config.target.kind === 'server' ? config.target.auth : null;
-      if (sourceAuth === 'admin') {
-        warnings.push('GLOBAL is selected but the source is using admin credentials — superadmin is required.');
-      }
-      if (targetAuth === 'admin') {
-        warnings.push('GLOBAL will be ignored on import because the target uses admin credentials (superadmin required).');
-      }
+      this.collectGlobalWarnings(config, warnings);
     }
     if (config.keepApiKeys) {
       warnings.push('--keepApiKeys writes API key values in cleartext into the export file.');
@@ -163,8 +178,14 @@ export class CommandBuilderService {
     if (config.verbose) {
       warnings.push('--verbose logs full HTTP traffic, which may include credentials and secrets.');
     }
-    if (config.deleteUnmatched) {
-      warnings.push('--delete will remove target entities that are not present in the source. Test against a non-production server first.');
+    if (config.noUtransferUser) {
+      const targetAuth = config.target.kind === 'server' ? config.target.auth : null;
+      if (targetAuth !== 'superadmin') {
+        warnings.push('--no-utransfer-user only applies when the target uses superadmin authentication.');
+      }
+    }
+    if (config.newUserPassword && !selected.has('USERS')) {
+      warnings.push('--new-user-password is set but USERS is not included — the flag will have no effect.');
     }
     if (
       config.source.kind === 'server' &&
@@ -185,6 +206,11 @@ export class CommandBuilderService {
     }
     if (config.addSuffix) {
       hints.push(`Globally unique names will be suffixed with "${config.addSuffix}" on import.`);
+    }
+    if (config.source.account) {
+      hints.push(
+        `Superadmin will operate on account "${config.source.account}"; the temporary utransfer user is created there.`,
+      );
     }
   }
 

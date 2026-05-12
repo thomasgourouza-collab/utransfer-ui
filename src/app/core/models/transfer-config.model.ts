@@ -9,6 +9,7 @@ export interface EndpointConfig {
   password: string;
   headerName: string;
   headerValue: string;
+  account: string;
   profileId?: string;
 }
 
@@ -31,7 +32,8 @@ export interface TransferConfig {
   keepApiKeys: boolean;
   keepMarkers: boolean;
   verbose: boolean;
-  deleteUnmatched: boolean;
+  newUserPassword: string;
+  noUtransferUser: boolean;
 }
 
 export function makeEmptyEndpoint(kind: EndpointKind): EndpointConfig {
@@ -44,6 +46,7 @@ export function makeEmptyEndpoint(kind: EndpointKind): EndpointConfig {
     password: '',
     headerName: '',
     headerValue: '',
+    account: '',
   };
 }
 
@@ -62,6 +65,7 @@ export function makeDefaultConfig(jarPath: string): TransferConfig {
     keepApiKeys: false,
     keepMarkers: false,
     verbose: false,
-    deleteUnmatched: false,
+    newUserPassword: '',
+    noUtransferUser: false,
   };
 }

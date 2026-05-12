@@ -88,6 +88,22 @@ import { DecryptedServerProfile } from '../../../core/models/server-profile.mode
               <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
           </mat-form-field>
+
+          @if (endpoint().auth === 'superadmin' && side() === 'from') {
+            <mat-form-field appearance="outline">
+              <mat-label>
+                Account ID (optional)
+                <app-info-popover text="When set, the superadmin operates on this specific account instead of their own. Maps to --fromAccount." />
+              </mat-label>
+              <input
+                matInput
+                [ngModel]="endpoint().account"
+                (ngModelChange)="patch({ account: $event })"
+                placeholder="acme"
+                autocomplete="off"
+              />
+            </mat-form-field>
+          }
         } @else if (endpoint().auth === 'header') {
           <mat-form-field appearance="outline">
             <mat-label>Header name</mat-label>
@@ -132,6 +148,7 @@ import { DecryptedServerProfile } from '../../../core/models/server-profile.mode
 })
 export class EndpointFormComponent {
   readonly endpoint = model.required<EndpointConfig>();
+  readonly side = input.required<'from' | 'to'>();
   readonly placeholder = input<string>('/tmp/export.json');
 
   protected readonly authModes = AUTH_MODES;
@@ -156,6 +173,7 @@ export class EndpointFormComponent {
       password: profile.password,
       headerName: profile.headerName ?? '',
       headerValue: profile.headerValue ?? '',
+      account: '',
       profileId: profile.id,
     });
   }

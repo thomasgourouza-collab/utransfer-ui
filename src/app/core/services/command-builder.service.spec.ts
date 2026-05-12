@@ -16,6 +16,7 @@ function exportConfig(overrides: Partial<TransferConfig> = {}): TransferConfig {
     password: 'pass',
     headerName: '',
     headerValue: '',
+    account: '',
   };
   cfg.target = {
     kind: 'file',
@@ -26,6 +27,7 @@ function exportConfig(overrides: Partial<TransferConfig> = {}): TransferConfig {
     password: '',
     headerName: '',
     headerValue: '',
+    account: '',
   };
   return { ...cfg, ...overrides };
 }
@@ -134,6 +136,7 @@ describe('CommandBuilderService', () => {
       password: 'pwd',
       headerName: '',
       headerValue: '',
+      account: '',
     };
     cfg.target = {
       kind: 'server',
@@ -144,6 +147,7 @@ describe('CommandBuilderService', () => {
       password: 'pwd',
       headerName: '',
       headerValue: '',
+      account: '',
     };
     const out = svc.build(cfg);
     expect(out.argv).toContain('--fromSuperadmin=superadmin');
@@ -166,6 +170,7 @@ describe('CommandBuilderService', () => {
       password: '',
       headerName: '',
       headerValue: '',
+      account: '',
     };
     cfg.target = {
       kind: 'server',
@@ -176,6 +181,7 @@ describe('CommandBuilderService', () => {
       password: 'password',
       headerName: '',
       headerValue: '',
+      account: '',
     };
     cfg.verbose = true;
     const out = svc.build(cfg);
@@ -209,15 +215,37 @@ describe('CommandBuilderService', () => {
     expect(out.argv.some((a) => a.startsWith('--fromAdmin'))).toBe(false);
   });
 
-  it('emits --fromHeader + -d for header auth', () => {
+  it('emits --fromHeader=name=value as a single arg for header auth', () => {
     const cfg = exportConfig();
     cfg.source.auth = 'header';
     cfg.source.headerName = 'X-Forwarded-User';
     cfg.source.headerValue = 'tg';
     const out = svc.build(cfg);
-    expect(out.argv).toContain('--fromHeader=X-Forwarded-User');
-    expect(out.argv).toContain('-d');
-    expect(out.argv).toContain('tg');
+    expect(out.argv).toContain('--fromHeader=X-Forwarded-User=tg');
+    expect(out.argv).not.toContain('-d');
+  });
+
+  it('emits --fromAccount when superadmin source has account set', () => {
+    const cfg = exportConfig();
+    cfg.source.auth = 'superadmin';
+    cfg.source.account = 'acme';
+    const out = svc.build(cfg);
+    expect(out.argv).toContain('--fromAccount=acme');
+  });
+
+  it('does not emit --fromAccount when admin auth is used', () => {
+    const cfg = exportConfig();
+    cfg.source.account = 'acme';
+    const out = svc.build(cfg);
+    expect(out.argv.some((a) => a.startsWith('--fromAccount'))).toBe(false);
+    expect(out.errors.some((e) => e.includes('superadmin'))).toBe(true);
+  });
+
+  it('emits --new-user-password and --no-utransfer-user when set', () => {
+    const cfg = exportConfig({ newUserPassword: 'secret', noUtransferUser: true });
+    const out = svc.build(cfg);
+    expect(out.argv).toContain('--new-user-password=secret');
+    expect(out.argv).toContain('--no-utransfer-user');
   });
 
   it('reports an error when filterMode=just but no entities selected', () => {
@@ -250,6 +278,7 @@ describe('CommandBuilderService', () => {
       password: 'b',
       headerName: '',
       headerValue: '',
+      account: '',
     };
     cfg.target = { ...cfg.source };
     const out = svc.build(cfg);
