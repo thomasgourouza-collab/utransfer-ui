@@ -1,0 +1,41 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-toolbar {
+  position: relative;
+  z-index: 2;
+}
+
+.app-title {
+  font: var(--mat-sys-headline-smaller);
+  letter-spacing: 0.3px;
+}
+
+.app-sidenav-container {
+  flex: 1 1 auto;
+  background: var(--mat-sys-surface);
+  min-height: 0;
+}
+
+.app-sidenav {
+  width: 240px;
+  border-right: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface-container-low);
+}
+
+.app-content {
+  background: var(--mat-sys-surface);
+  overflow: auto;
+}
+
+.mat-mdc-list-item.active {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+
+  .mat-icon {
+    color: var(--mat-sys-on-secondary-container);
+  }
+}
